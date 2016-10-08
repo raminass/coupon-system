@@ -1,7 +1,12 @@
 package facade;
 
+import java.text.Format;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 import coupons.core.beans.Coupon;
@@ -13,6 +18,7 @@ import coupons.core.db.dao.CompanyDBDAO;
 import coupons.core.db.dao.CouponDBDAO;
 import coupons.core.db.dao.CustomerDBDAO;
 import coupons.core.exceptions.CouponSystemException;
+import utils.*;
 
 public class CompanyFacade implements CouponClientFacade {
 
@@ -51,14 +57,17 @@ public class CompanyFacade implements CouponClientFacade {
 	public void updateCoupon(Coupon coupon) throws CouponSystemException {
 
 		Coupon oldCoupon = couponDAO.getCoupon(coupon.getId());
+		Format formatter = new SimpleDateFormat("yyyy-MM-dd");
+		String date1 = formatter.format(oldCoupon.getStartDate());
+		String date2 = formatter.format(coupon.getStartDate());
 
-		if (oldCoupon.getTitle() != coupon.getTitle()) {
+		if (!(oldCoupon.getTitle().equals(coupon.getTitle()))) {
 
 			throw new CouponSystemException("can't change coupon title");
 
 		}
 
-		else if (oldCoupon.getStartDate() != coupon.getStartDate()) {
+		else if (!(date1.equals(date2))) {
 
 			throw new CouponSystemException("can't change coupon startDate");
 
@@ -74,12 +83,12 @@ public class CompanyFacade implements CouponClientFacade {
 			throw new CouponSystemException("can't change coupon Type");
 		}
 
-		else if (oldCoupon.getMessage() != coupon.getMessage()) {
+		else if (!(oldCoupon.getMessage().equals(coupon.getMessage()))) {
 
 			throw new CouponSystemException("can't change coupon Message");
 		}
 
-		else if (oldCoupon.getImage() != coupon.getImage()) {
+		else if (!(compareString.compareStrings(oldCoupon.getImage(), coupon.getImage()))) {
 
 			throw new CouponSystemException("can't change coupon Image");
 		}
@@ -94,7 +103,19 @@ public class CompanyFacade implements CouponClientFacade {
 
 	public Coupon getCoupon(long couponId) throws CouponSystemException {
 
-		return couponDAO.getCoupon(couponId);
+		Collection<Coupon> coupons = this.getAllCoupon();
+
+		for (Iterator iterator = coupons.iterator(); iterator.hasNext();) {
+			Coupon cop = (Coupon) iterator.next();
+			if (cop.getId() == couponId) {
+
+				return couponDAO.getCoupon(couponId);
+
+			}
+
+		}
+
+		throw new CouponSystemException("coupon doesn't belong to this company");
 
 	}
 
@@ -107,27 +128,23 @@ public class CompanyFacade implements CouponClientFacade {
 	public Collection<Coupon> getCouponByType(CouponType type) throws CouponSystemException {
 
 		Collection<Coupon> coupons = this.getAllCoupon();
-		Stream<Coupon> filteredCoupons = coupons.stream().filter(p -> p.getType() == type);
 
-		return (Collection<Coupon>) filteredCoupons;
+		return companyDAO.getCouponsByType(this.companyId, type);
 	}
 
 	public Collection<Coupon> getCouponUpToPrice(Double price) throws CouponSystemException {
 
 		Collection<Coupon> coupons = this.getAllCoupon();
-		Stream<Coupon> filteredCoupons = coupons.stream().filter(p -> p.getPrice() < price);
 
-		return (Collection<Coupon>) filteredCoupons;
+		return companyDAO.getCouponsByPrice(this.companyId, price);
 	}
 
 	public Collection<Coupon> getCouponUpToDate(Date endDate) throws CouponSystemException {
 
 		Collection<Coupon> coupons = this.getAllCoupon();
-		Stream<Coupon> filteredCoupons = coupons.stream().filter(p -> p.getEndDate().compareTo(endDate) < 0);
 
-		return (Collection<Coupon>) filteredCoupons;
+		return companyDAO.getCouponsUpToDate(this.companyId, endDate);
+
 	}
-	
-	
 
 }

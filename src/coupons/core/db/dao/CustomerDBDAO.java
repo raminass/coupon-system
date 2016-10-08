@@ -10,6 +10,7 @@ import java.util.Collection;
 import org.apache.derby.tools.sysinfo;
 
 import coupons.core.beans.Coupon;
+import coupons.core.beans.CouponType;
 import coupons.core.beans.Customer;
 import coupons.core.dao.CustomerDAO;
 import coupons.core.db.ConnectionPool;
@@ -36,6 +37,7 @@ public class CustomerDBDAO implements CustomerDAO {
 				pstmt.setString(2, customer.getCustName());
 				pstmt.setString(3, customer.getPassword());
 				pstmt.executeUpdate();
+				System.out.println("new customer created successfully: " + customer);
 
 			} catch (SQLException e) {
 				throw new CouponSystemException("create failed", e);
@@ -142,7 +144,6 @@ public class CustomerDBDAO implements CustomerDAO {
 
 			else {
 
-				System.out.println("customer doesn't exist");
 				customer.setId(0L);
 				return customer;
 
@@ -283,6 +284,82 @@ public class CustomerDBDAO implements CustomerDAO {
 		} catch (SQLException e) {
 			throw new CouponSystemException("read failed", e);
 
+		} finally { // return connection to pool
+			if (con != null) {
+				ConnectionPool.getInstance().returnConnection(con);
+			}
+		}
+	}
+
+	@Override
+	public Collection<Coupon> getCouponsByType(Long id, CouponType type) throws CouponSystemException {
+		Connection con = null;
+		Collection<Coupon> coupons = new ArrayList<Coupon>();
+
+		try {
+			// get connection from pool
+			con = ConnectionPool.getInstance().getConnection();
+			String sql = "select a.* from coupon a,customer_coupon b where a.id=b.coupon_id and b.cust_id = ? and a.type = ?";
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setLong(1, id);
+			pstmt.setInt(2, type.ordinal());
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				Coupon coupon = new Coupon();
+				coupon.setId(rs.getLong(1));
+				coupon.setTitle(rs.getString(2));
+				coupon.setStartDate(rs.getDate(3));
+				coupon.setEndDate(rs.getDate(4));
+				coupon.setAmount(rs.getInt(5));
+				coupon.setType(rs.getInt(6));
+				coupon.setMessage(rs.getString(7));
+				coupon.setPrice(rs.getDouble(8));
+				coupon.setImage(rs.getString(9));
+				coupons.add(coupon);
+			}
+			return coupons;
+		}
+
+		catch (SQLException e) {
+			throw new CouponSystemException("get all coupons failed", e);
+		} finally { // return connection to pool
+			if (con != null) {
+				ConnectionPool.getInstance().returnConnection(con);
+			}
+		}
+	}
+
+	@Override
+	public Collection<Coupon> getCouponsUpToPrice(Long id, double price) throws CouponSystemException {
+		Connection con = null;
+		Collection<Coupon> coupons = new ArrayList<Coupon>();
+
+		try {
+			// get connection from pool
+			con = ConnectionPool.getInstance().getConnection();
+			String sql = "select a.* from coupon a,customer_coupon b where a.id=b.coupon_id and b.cust_id = ? and a.price <= ?";
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setLong(1, id);
+			pstmt.setDouble(2, price);
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				Coupon coupon = new Coupon();
+				coupon.setId(rs.getLong(1));
+				coupon.setTitle(rs.getString(2));
+				coupon.setStartDate(rs.getDate(3));
+				coupon.setEndDate(rs.getDate(4));
+				coupon.setAmount(rs.getInt(5));
+				coupon.setType(rs.getInt(6));
+				coupon.setMessage(rs.getString(7));
+				coupon.setPrice(rs.getDouble(8));
+				coupon.setImage(rs.getString(9));
+				coupons.add(coupon);
+			}
+			return coupons;
+		}
+
+		catch (SQLException e) {
+			throw new CouponSystemException("get all coupons failed", e);
 		} finally { // return connection to pool
 			if (con != null) {
 				ConnectionPool.getInstance().returnConnection(con);

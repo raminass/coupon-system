@@ -6,8 +6,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
+
 import coupons.core.beans.Company;
 import coupons.core.beans.Coupon;
+import coupons.core.beans.CouponType;
 import coupons.core.dao.CompanyDAO;
 import coupons.core.db.ConnectionPool;
 import coupons.core.exceptions.CouponSystemException;
@@ -38,6 +41,7 @@ public class CompanyDBDAO implements CompanyDAO {
 				pstmt.setString(3, company.getPassword());
 				pstmt.setString(4, company.getEmail());
 				pstmt.executeUpdate();
+				System.out.println("new company created successfully: " + company);
 
 			} catch (SQLException e) {
 				throw new CouponSystemException("create failed", e);
@@ -136,7 +140,7 @@ public class CompanyDBDAO implements CompanyDAO {
 
 				return company;
 			} else {
-				System.out.println("company doesn't exist");
+
 				company.setId(0L);
 				return company;
 			}
@@ -258,7 +262,6 @@ public class CompanyDBDAO implements CompanyDAO {
 		return userId;
 	}
 
-
 	@Override
 	public boolean checkCompNameExist(String name) throws CouponSystemException {
 
@@ -286,6 +289,128 @@ public class CompanyDBDAO implements CompanyDAO {
 				ConnectionPool.getInstance().returnConnection(con);
 			}
 		}
+	}
+
+	@Override
+	public Collection<Coupon> getCouponsByType(Long id, CouponType type) throws CouponSystemException {
+		Connection con = null;
+		Collection<Coupon> coupons = new ArrayList<Coupon>();
+
+		try {
+			// get connection from pool
+			con = ConnectionPool.getInstance().getConnection();
+			String sql = "select a.* from coupon a,company_coupon b where a.id=b.coupon_id and b.comp_id = ? and a.type = ?";
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setLong(1, id);
+			pstmt.setInt(2, type.ordinal());
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				Coupon coupon = new Coupon();
+				coupon.setId(rs.getLong(1));
+				coupon.setTitle(rs.getString(2));
+				coupon.setStartDate(rs.getDate(3));
+				coupon.setEndDate(rs.getDate(4));
+				coupon.setAmount(rs.getInt(5));
+				coupon.setType(rs.getInt(6));
+				coupon.setMessage(rs.getString(7));
+				coupon.setPrice(rs.getDouble(8));
+				coupon.setImage(rs.getString(9));
+				coupons.add(coupon);
+			}
+			return coupons;
+		}
+
+		catch (SQLException e) {
+			throw new CouponSystemException("get all coupons failed", e);
+		} finally { // return connection to pool
+			if (con != null) {
+				ConnectionPool.getInstance().returnConnection(con);
+			}
+		}
+
+	}
+
+	@Override
+	public Collection<Coupon> getCouponsByPrice(Long id, double price) throws CouponSystemException {
+
+		Connection con = null;
+		Collection<Coupon> coupons = new ArrayList<Coupon>();
+
+		try {
+			// get connection from pool
+			con = ConnectionPool.getInstance().getConnection();
+			String sql = "select a.* from coupon a,company_coupon b where a.id=b.coupon_id and b.comp_id = ? and a.price <= ?";
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setLong(1, id);
+			pstmt.setDouble(2, price);
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				Coupon coupon = new Coupon();
+				coupon.setId(rs.getLong(1));
+				coupon.setTitle(rs.getString(2));
+				coupon.setStartDate(rs.getDate(3));
+				coupon.setEndDate(rs.getDate(4));
+				coupon.setAmount(rs.getInt(5));
+				coupon.setType(rs.getInt(6));
+				coupon.setMessage(rs.getString(7));
+				coupon.setPrice(rs.getDouble(8));
+				coupon.setImage(rs.getString(9));
+				coupons.add(coupon);
+			}
+			return coupons;
+		}
+
+		catch (SQLException e) {
+			throw new CouponSystemException("get all coupons failed", e);
+		} finally { // return connection to pool
+			if (con != null) {
+				ConnectionPool.getInstance().returnConnection(con);
+			}
+		}
+
+	}
+
+	@Override
+	public Collection<Coupon> getCouponsUpToDate(Long id, Date endDate) throws CouponSystemException {
+		
+		Connection con = null;
+		Collection<Coupon> coupons = new ArrayList<Coupon>();
+
+		try {
+			// get connection from pool
+			con = ConnectionPool.getInstance().getConnection();
+			String sql = "select a.* from coupon a,company_coupon b where a.id=b.coupon_id and b.comp_id = ? and a.end_date <= ?";
+			PreparedStatement pstmt = con.prepareStatement(sql);
+			pstmt.setLong(1, id);
+			java.util.Date endDateBean = endDate;
+			java.sql.Date endDateSQL = new java.sql.Date(endDateBean.getTime());
+			pstmt.setDate(2, endDateSQL);
+			
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				Coupon coupon = new Coupon();
+				coupon.setId(rs.getLong(1));
+				coupon.setTitle(rs.getString(2));
+				coupon.setStartDate(rs.getDate(3));
+				coupon.setEndDate(rs.getDate(4));
+				coupon.setAmount(rs.getInt(5));
+				coupon.setType(rs.getInt(6));
+				coupon.setMessage(rs.getString(7));
+				coupon.setPrice(rs.getDouble(8));
+				coupon.setImage(rs.getString(9));
+				coupons.add(coupon);
+			}
+			return coupons;
+		}
+
+		catch (SQLException e) {
+			throw new CouponSystemException("get all coupons failed", e);
+		} finally { // return connection to pool
+			if (con != null) {
+				ConnectionPool.getInstance().returnConnection(con);
+			}
+		}
+
 	}
 
 }

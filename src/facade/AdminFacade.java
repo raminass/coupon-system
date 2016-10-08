@@ -52,7 +52,7 @@ public class AdminFacade implements CouponClientFacade {
 
 	public void updateCompany(Company company) throws CouponSystemException {
 
-		if ((companyDAO.getCompany(company.getId())).getCompName() == company.getCompName()) {
+		if ((companyDAO.getCompany(company.getId())).getCompName().equals(company.getCompName())) {
 
 			companyDAO.updateCompany(company);
 		}
@@ -97,7 +97,7 @@ public class AdminFacade implements CouponClientFacade {
 
 	public void updateCustomer(Customer customer) throws CouponSystemException {
 
-		if ((customerDAO.getCustomer(customer.getId())).getCustName() == customer.getCustName()) {
+		if ((customerDAO.getCustomer(customer.getId())).getCustName().equals(customer.getCustName())) {
 
 			customerDAO.updateCustomer(customer);
 		}
@@ -116,13 +116,6 @@ public class AdminFacade implements CouponClientFacade {
 	public Collection<Customer> getAllCustomers() throws CouponSystemException {
 		return customerDAO.getAllCustomers();
 
-	}
-	
-	
-	public Collection<Customer> getAllCustomer() throws CouponSystemException{
-		
-		return customerDAO.getAllCustomers();
-		
 	}
 
 }

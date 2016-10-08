@@ -38,7 +38,7 @@ public class CutomerFacade implements CouponClientFacade {
 
 		// check if the coupon has been purchased
 		else if (couponDAO.getCustomerCoupon(coupon.getId()) == this.customerId) {
-			throw new CouponSystemException("coupon already purchased by another customer");
+			throw new CouponSystemException("coupon already purchased by this customer");
 
 		}
 
@@ -62,18 +62,14 @@ public class CutomerFacade implements CouponClientFacade {
 
 	public Collection<Coupon> getAllPurchasedCouponsByType(CouponType type) throws CouponSystemException {
 		Collection<Coupon> coupons = this.getAllPurchasedCoupons();
-		Stream<Coupon> filteredCoupons = coupons.stream().filter(p -> p.getType() == type);
-
-		return (Collection<Coupon>) filteredCoupons;
+		return customerDAO.getCouponsByType(this.customerId, type);
 
 	}
 
 	public Collection<Coupon> getAllPurchasedCouponsByPrice(Double price) throws CouponSystemException {
 
 		Collection<Coupon> coupons = this.getAllPurchasedCoupons();
-		Stream<Coupon> filteredCoupons = coupons.stream().filter(p -> p.getPrice() < price);
-
-		return (Collection<Coupon>) filteredCoupons;
+		return customerDAO.getCouponsUpToPrice(this.customerId, price);
 	}
 
 }

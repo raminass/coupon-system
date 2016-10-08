@@ -510,7 +510,8 @@ public class CouponDBDAO implements CouponDAO {
 			sql = "delete from customer_coupon where coupon_id in (select id from coupon where end_date < CURRENT_DATE)";
 			pstmt = con.prepareStatement(sql);
 			pstmt.executeUpdate();
-
+			
+			//delete expired coupons from coupon table
 			sql = "delete from coupon where end_date < CURRENT_DATE";
 			pstmt = con.prepareStatement(sql);
 			pstmt.executeUpdate();
